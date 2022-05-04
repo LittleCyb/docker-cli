@@ -54,6 +54,7 @@ func NewStartCommand(dockerCli command.Cli) *cobra.Command {
 	flags.BoolVarP(&opts.OpenStdin, "interactive", "i", false, "Attach container's STDIN")
 	flags.StringVar(&opts.DetachKeys, "detach-keys", "", "Override the key sequence for detaching a container")
 
+	flags.VarP(&opts.Publish, "publish", "p", "Publish a container's port(s) to the host")
 	flags.StringVar(&opts.Checkpoint, "checkpoint", "", "Restore from this checkpoint")
 	flags.SetAnnotation("checkpoint", "experimental", nil)
 	flags.SetAnnotation("checkpoint", "ostype", []string{"linux"})
