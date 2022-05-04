@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/docker/cli/opts"
+	"github.com/docker/go-connections/nat"
 )
 
 // StartOptions group options for `start` command
@@ -69,6 +70,27 @@ func NewStartCommand(dockerCli command.Cli) *cobra.Command {
 func RunStart(dockerCli command.Cli, opts *StartOptions) error {
 	ctx, cancelFun := context.WithCancel(context.Background())
 	defer cancelFun()
+
+
+	var err error
+	publishOpts := opts.Publish.GetAll()
+	var (
+		exposedPorts      map[nat.Port]struct{}
+		portBindings      map[nat.Port][]nat.PortBinding
+		convertedOpts     []string
+	)
+
+	convertedOpts, err = convertToStandardNotation(publishOpts)
+	if err != nil {
+		return err
+	}
+
+	exposedPorts, portBindings, err = nat.ParsePortSpecs(convertedOpts)
+	if err != nil {
+		return err
+	}
+
+
 
 	if opts.Attach || opts.OpenStdin {
 		// We're going to attach to a container.
@@ -143,6 +165,8 @@ func RunStart(dockerCli command.Cli, opts *StartOptions) error {
 		startOptions := types.ContainerStartOptions{
 			CheckpointID:  opts.Checkpoint,
 			CheckpointDir: opts.CheckpointDir,
+			ExposedPorts:  exposedPorts,
+			PortBindings:  portBindings,
 		}
 
 		// 4. Start the container.
@@ -181,6 +205,8 @@ func RunStart(dockerCli command.Cli, opts *StartOptions) error {
 		startOptions := types.ContainerStartOptions{
 			CheckpointID:  opts.Checkpoint,
 			CheckpointDir: opts.CheckpointDir,
+			ExposedPorts:  exposedPorts,
+			PortBindings:  portBindings,
 		}
 		return dockerCli.Client().ContainerStart(ctx, container, startOptions)
 

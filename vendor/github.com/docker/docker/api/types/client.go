@@ -8,6 +8,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	units "github.com/docker/go-units"
+	"github.com/docker/go-connections/nat"
 )
 
 // CheckpointCreateOptions holds parameters to create a checkpoint from a container
@@ -91,6 +92,8 @@ type ContainerRemoveOptions struct {
 type ContainerStartOptions struct {
 	CheckpointID  string
 	CheckpointDir string
+	ExposedPorts  map[nat.Port]struct{}
+	PortBindings  map[nat.Port][]nat.PortBinding
 }
 
 // CopyToContainerOptions holds information
