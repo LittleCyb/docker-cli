@@ -13,6 +13,7 @@ import (
 	"github.com/moby/term"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/docker/cli/opts"
 )
 
 // StartOptions group options for `start` command
@@ -22,18 +23,21 @@ type StartOptions struct {
 	DetachKeys    string
 	Checkpoint    string
 	CheckpointDir string
-
+	Publish			opts.ListOpts
 	Containers []string
 }
 
 // NewStartOptions creates a new StartOptions
 func NewStartOptions() StartOptions {
-	return StartOptions{}
+	return StartOptions{
+		Publish:	opts.NewListOpts(nil),
+	}
 }
 
 // NewStartCommand creates a new cobra.Command for `docker start`
 func NewStartCommand(dockerCli command.Cli) *cobra.Command {
-	var opts StartOptions
+	////var opts StartOptions
+	opts := NewStartOptions()
 
 	cmd := &cobra.Command{
 		Use:   "start [OPTIONS] CONTAINER [CONTAINER...]",
