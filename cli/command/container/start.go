@@ -90,6 +90,8 @@ func RunStart(dockerCli command.Cli, opts *StartOptions) error {
 		return err
 	}
 
+	fmt.Println("\n\n\n(in start.go)exposedPorts: ", exposedPorts)
+	fmt.Println("\n\n\n(in start.go)portBindings: ", portBindings)
 
 
 	if opts.Attach || opts.OpenStdin {
@@ -169,6 +171,8 @@ func RunStart(dockerCli command.Cli, opts *StartOptions) error {
 			PortBindings:  portBindings,
 		}
 
+		fmt.Println("Now calling dockerCli.Client().ContainerStart(ctx, c.ID, startOptions) with startOptions:\n", startOptions)
+
 		// 4. Start the container.
 		if err := dockerCli.Client().ContainerStart(ctx, c.ID, startOptions); err != nil {
 			cancelFun()
@@ -213,22 +217,28 @@ func RunStart(dockerCli command.Cli, opts *StartOptions) error {
 	} else {
 		// We're not going to attach to anything.
 		// Start as many containers as we want.
-		return startContainersWithoutAttachments(ctx, dockerCli, opts.Containers)
+		return startContainersWithoutAttachments(ctx, dockerCli, opts.Containers, exposedPorts, portBindings)
 	}
 
 	return nil
 }
 
-func startContainersWithoutAttachments(ctx context.Context, dockerCli command.Cli, containers []string) error {
+func startContainersWithoutAttachments(ctx context.Context, dockerCli command.Cli, containers []string, exposedPorts map[nat.Port]struct{}, portBindings map[nat.Port][]nat.PortBinding) error {
 	var failedContainers []string
 	for _, container := range containers {
-		if err := dockerCli.Client().ContainerStart(ctx, container, types.ContainerStartOptions{}); err != nil {
+		startOptions := types.ContainerStartOptions{
+			ExposedPorts:  exposedPorts,
+			PortBindings:  portBindings,
+		}
+		if err := dockerCli.Client().ContainerStart(ctx, container, startOptions); err != nil {
 			fmt.Fprintln(dockerCli.Err(), err)
 			failedContainers = append(failedContainers, container)
 			continue
 		}
 		fmt.Fprintln(dockerCli.Out(), container)
 	}
+
+	fmt.Println("Enter startContainersWithoutAttachments\n")
 
 	if len(failedContainers) > 0 {
 		return errors.Errorf("Error: failed to start containers: %s", strings.Join(failedContainers, ", "))
