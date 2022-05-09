@@ -32,6 +32,10 @@ func (cli *Client) ContainerStart(ctx context.Context, containerID string, optio
 			PortBindings:	&options.PortBindings,
 		}
 
+		fmt.Println("\n\n\n(in container_start.go)This is the body: ", body)
+    	fmt.Println("\n\n\n(container_start.go)Sending the address, but this is ExposedPorts: ", options.ExposedPorts)
+    	fmt.Println("\n\n\n(container_start.go)Sending the address, but this is PortBindings: ", options.PortBindings)
+
 		resp, err := cli.post(ctx, "/containers/"+containerID+"/start", query, body, nil)
 		ensureReaderClosed(resp)
 		return err
