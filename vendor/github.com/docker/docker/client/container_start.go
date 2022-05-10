@@ -25,7 +25,7 @@ func (cli *Client) ContainerStart(ctx context.Context, containerID string, optio
 	}
 
 	var body portConfigWrapper
-
+ 
 	if len(options.ExposedPorts) != 0 && len(options.PortBindings) != 0 {
 		body = portConfigWrapper{
 			ExposedPorts:	&options.ExposedPorts,
@@ -33,17 +33,15 @@ func (cli *Client) ContainerStart(ctx context.Context, containerID string, optio
 		}
 
 		fmt.Println("\n\n\n(in container_start.go)This is the body: ", body)
-    	fmt.Println("\n\n\n(container_start.go)Sending the address, but this is ExposedPorts: ", options.ExposedPorts)
-    	fmt.Println("\n\n\n(container_start.go)Sending the address, but this is PortBindings: ", options.PortBindings)
+    	fmt.Println("\n\n\n(container_start.go)Sending the address for ExposedPorts, but this is ExposedPorts: ", options.ExposedPorts)
+    	fmt.Println("\n\n\n(container_start.go)Sending the address for PortBindings, but this is PortBindings: ", options.PortBindings)
 
 		resp, err := cli.post(ctx, "/containers/"+containerID+"/start", query, body, nil)
 		ensureReaderClosed(resp)
 		return err
 	}
 
-	fmt.Println("\n\n\n(in container_start.go)This is the body: ", body)
-    fmt.Println("\n\n\n(container_start.go)Sending the address, but this is ExposedPorts: ", options.ExposedPorts)
-    fmt.Println("\n\n\n(container_start.go)Sending the address, but this is PortBindings: ", options.PortBindings)
+	fmt.Println("\n\n\n(in container_start.go)Sending 'nil' body as part of POST request for ContainerStart: ", )
 
 	resp, err := cli.post(ctx, "/containers/"+containerID+"/start", query, nil, nil)
 	ensureReaderClosed(resp)
