@@ -3,7 +3,6 @@ package client // import "github.com/docker/docker/client"
 import (
 	"context"
 	"net/url"
-	"fmt"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/go-connections/nat"
@@ -32,16 +31,17 @@ func (cli *Client) ContainerStart(ctx context.Context, containerID string, optio
 			PortBindings:	&options.PortBindings,
 		}
 
-		fmt.Println("\n\n\n(in container_start.go)This is the body: ", body)
-    	fmt.Println("\n\n\n(container_start.go)Sending the address for ExposedPorts, but this is ExposedPorts: ", options.ExposedPorts)
-    	fmt.Println("\n\n\n(container_start.go)Sending the address for PortBindings, but this is PortBindings: ", options.PortBindings)
+		//Debug statements
+    	//fmt.Println("\n\n\n(container_start.go)Sending the address for ExposedPorts, but this is ExposedPorts: ", options.ExposedPorts)
+    	//fmt.Println("\n\n\n(container_start.go)Sending the address for PortBindings, but this is PortBindings: ", options.PortBindings)
 
 		resp, err := cli.post(ctx, "/containers/"+containerID+"/start", query, body, nil)
 		ensureReaderClosed(resp)
 		return err
 	}
 
-	fmt.Println("\n\n\n(in container_start.go)Sending 'nil' body as part of POST request for ContainerStart: ", )
+	//Debug statement
+	//fmt.Println("\n\n\n(in container_start.go)Sending 'nil' body as part of POST request for ContainerStart: ", )
 
 	resp, err := cli.post(ctx, "/containers/"+containerID+"/start", query, nil, nil)
 	ensureReaderClosed(resp)

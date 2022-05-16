@@ -8,13 +8,13 @@ import (
 
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
+	"github.com/docker/cli/opts"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/go-connections/nat"
 	"github.com/moby/sys/signal"
 	"github.com/moby/term"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/docker/cli/opts"
-	"github.com/docker/go-connections/nat"
 )
 
 // StartOptions group options for `start` command
@@ -24,14 +24,14 @@ type StartOptions struct {
 	DetachKeys    string
 	Checkpoint    string
 	CheckpointDir string
-	Publish			opts.ListOpts
-	Containers []string
+	Publish       opts.ListOpts
+	Containers    []string
 }
 
 // NewStartOptions creates a new StartOptions
 func NewStartOptions() StartOptions {
 	return StartOptions{
-		Publish:	opts.NewListOpts(nil),
+		Publish: opts.NewListOpts(nil),
 	}
 }
 
@@ -55,7 +55,7 @@ func NewStartCommand(dockerCli command.Cli) *cobra.Command {
 	flags.BoolVarP(&opts.OpenStdin, "interactive", "i", false, "Attach container's STDIN")
 	flags.StringVar(&opts.DetachKeys, "detach-keys", "", "Override the key sequence for detaching a container")
 
-	flags.VarP(&opts.Publish, "publish", "p", "Publish a container's port(s) to the host")
+	flags.VarP(&opts.Publish, "publish", "p", "Publish a container's port(s) to the host, use -p 0:0 to reset to remove the current container port mapping")
 	flags.StringVar(&opts.Checkpoint, "checkpoint", "", "Restore from this checkpoint")
 	flags.SetAnnotation("checkpoint", "experimental", nil)
 	flags.SetAnnotation("checkpoint", "ostype", []string{"linux"})
@@ -71,13 +71,12 @@ func RunStart(dockerCli command.Cli, opts *StartOptions) error {
 	ctx, cancelFun := context.WithCancel(context.Background())
 	defer cancelFun()
 
-
 	var err error
 	publishOpts := opts.Publish.GetAll()
 	var (
-		exposedPorts      map[nat.Port]struct{}
-		portBindings      map[nat.Port][]nat.PortBinding
-		convertedOpts     []string
+		exposedPorts  map[nat.Port]struct{}
+		portBindings  map[nat.Port][]nat.PortBinding
+		convertedOpts []string
 	)
 
 	convertedOpts, err = convertToStandardNotation(publishOpts)
@@ -90,9 +89,9 @@ func RunStart(dockerCli command.Cli, opts *StartOptions) error {
 		return err
 	}
 
-	fmt.Println("\n\n\n(in start.go)exposedPorts: ", exposedPorts)
-	fmt.Println("\n\n\n(in start.go)portBindings: ", portBindings)
-
+	//Debug statements
+	//fmt.Println("\n\n\n(in start.go)exposedPorts: ", exposedPorts)
+	//fmt.Println("\n\n\n(in start.go)portBindings: ", portBindings)
 
 	if opts.Attach || opts.OpenStdin {
 		// We're going to attach to a container.
@@ -171,7 +170,8 @@ func RunStart(dockerCli command.Cli, opts *StartOptions) error {
 			PortBindings:  portBindings,
 		}
 
-		fmt.Println("Now calling dockerCli.Client().ContainerStart(ctx, c.ID, startOptions) with startOptions:\n", startOptions)
+		//Debug statement
+		//fmt.Println("Now calling dockerCli.Client().ContainerStart(ctx, c.ID, startOptions) with startOptions:\n", startOptions)
 
 		// 4. Start the container.
 		if err := dockerCli.Client().ContainerStart(ctx, c.ID, startOptions); err != nil {
@@ -227,8 +227,8 @@ func startContainersWithoutAttachments(ctx context.Context, dockerCli command.Cl
 	var failedContainers []string
 	for _, container := range containers {
 		startOptions := types.ContainerStartOptions{
-			ExposedPorts:  exposedPorts,
-			PortBindings:  portBindings,
+			ExposedPorts: exposedPorts,
+			PortBindings: portBindings,
 		}
 		if err := dockerCli.Client().ContainerStart(ctx, container, startOptions); err != nil {
 			fmt.Fprintln(dockerCli.Err(), err)
@@ -237,8 +237,6 @@ func startContainersWithoutAttachments(ctx context.Context, dockerCli command.Cl
 		}
 		fmt.Fprintln(dockerCli.Out(), container)
 	}
-
-	fmt.Println("Enter startContainersWithoutAttachments\n")
 
 	if len(failedContainers) > 0 {
 		return errors.Errorf("Error: failed to start containers: %s", strings.Join(failedContainers, ", "))
